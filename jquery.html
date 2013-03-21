@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+
+<ul id="slideshow">
+<li><img src="http://dummyimage.com/600x400/000/FFF" alt="Img 1" title="Foo Bar"/></li>
+<li><img src="http://dummyimage.com/320x200/F00/000" alt="Img 2" title="Lorem Ipsum"/></li>
+<li><img src="http://dummyimage.com/160x120/00F/000" alt="Img 3" title="Bla bla bla"/></li>
+<li><img src="http://dummyimage.com/400x150/0F0/000" alt="Img 4" title="Mama mamamam amamm"/></li>
+<li><img src="http://dummyimage.com/150x400/FC0/000" alt="Img 4" title="Noon oono noo noon"/></li>
+</ul>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript">
+
+(function($) {
+  $.fn.slideShow = function(_options) {
+    var opts = $.extend({}, $.fn.slideShow.defaults, _options);
+    return this.each(function(){
+      var self = $(this);
+        self.find('li > img').each(function(){
+          if($(this).width() > opts.maxWidth)
+          {
+            console.log($(this).find('img').width());
+          }
+          
+        });
+    });
+
+  };
+})(jQuery);
+$(window).load(function(){
+  $('#slideshow').slideShow({maxWidth:70, maxHeight:50}).css('background', 'grey');
+});
+  </script>
+</body>
+</html>
