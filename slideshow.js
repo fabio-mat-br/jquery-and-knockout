@@ -1,13 +1,24 @@
+//http://docs.jquery.com/Plugins/Authoring - Namespacing
 ;
 (function ($) {
   $.fn.slideShow = function (options) {
-    var opts = $.extend({}, $.fn.slideShow.defaults, options);
+    var opts = $.fn.slideShow.opts = $.extend({}, $.fn.slideShow.defaults, options);
     return this.each(function () {
       var self = $(this),
           width = 0,
           height = 0;
-          
-      self.addClass('slideshow-main').find('li > img').each(function () {
+      $.fn.slideShow.createBasis(self);
+    });
+    
+  };
+  $.fn.slideShow.defaults = {
+    maxWidth : 250,
+    maxHeight : 250,
+    panelWidth: 500
+  };
+  $.fn.slideShow.createBasis = function(elem){
+    var opts = $.fn.slideShow.opts;
+    return elem.wrap($.fn.slideShow.createWrapper).addClass('slideshow-main').find('li > img').each(function () {
         width = $(this).width();
         height = $(this).height();
         if (width > opts.maxWidth) {
@@ -25,20 +36,36 @@
         }
       }).end().find('li').each(function(){
         var txt = $(this).find('img').prop('title');
-        console.log(txt);
-        $(this).addClass('wraptocenter').append($('<span>').text(txt));
-      });
-    });
+        $(this).addClass('wraptocenter').append($('<span>').text(txt).hide()).hover(function(){
+          $(this).find('span').slideDown()
+        }, function(){
+          $(this).find('span').slideUp()
+        });
+      }).end().find('li:first').addClass('current').end()
+      .before($('<a>').addClass('nav-prev').on('click', $.fn.slideShow.navPrev))
+      .after($('<a>').addClass('nav-next').on('click', $.fn.slideShow.navPrev));
   };
-  $.fn.slideShow.defaults = {
-    maxWidth : 250,
-    maxHeight : 250,
-    a : 1
-  };
-})(jQuery);
+  
+  $.fn.slideShow.createWrapper = function()
+  {
+    var opts = $.fn.slideShow.opts;
+    return $('<div>')
+            .addClass('slideshow-wrap')
+            .width(opts.panelWidth)
+            .height(opts.maxHeight);
+  }
+  $.fn.slideShow.navPrev = function(e)
+  {
+    debugger;
+    var t = $(this).closest('.slideshow-wrap');
+    //$(this).closest('.slideshow-wrap').find('.current').width();
+    //$(this).closest('.slideshow-wrap').find('.slideshow-main').css('left', -100);
+  }
+  })(jQuery);
 $(window).load(function () {
   $('#slideshow').slideShow({
     maxWidth : 150,
-    maxHeight : 100
+    maxHeight : 100,
+    panelWidth: 600
   }).css('background', 'grey');
 });
