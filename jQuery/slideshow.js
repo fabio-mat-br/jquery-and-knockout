@@ -56,8 +56,13 @@
   }
   $.fn.slideShow.navPrev = function(e)
   {
+    var t = $(this).closest('.slideshow-wrap'),
+        dim = t.find('.slideshow-main').position().left - t.find('.current').outerWidth();
+    
     debugger;
-    var t = $(this).closest('.slideshow-wrap');
+    t.find('.slideshow-main').animate({left: dim}, function(){
+      t.find('.current').removeClass('current').next().addClass('current');
+    });
     //$(this).closest('.slideshow-wrap').find('.current').width();
     //$(this).closest('.slideshow-wrap').find('.slideshow-main').css('left', -100);
   }
