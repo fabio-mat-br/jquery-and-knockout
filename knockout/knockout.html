@@ -1,0 +1,281 @@
+<!DOCTYPE HTML>
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8">
+	<!-- link rel="stylesheet" href="styles.css" -->
+	<title>Knockout + jQuery</title>
+	<style>
+	
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}	
+/* ................................................................................................ */	
+	
+body { font-family: Verdana, Geneva, sans-serif;	}	
+	
+	
+	
+#selectedItemsDiv{
+	float:right;
+	width: 210px;
+	border: solid 1px #69C;
+	position: fixed;
+	top: 10px;
+	right: 15px;
+	max-height: 480px;
+	overflow: auto;
+}
+#totalBox
+{
+}
+.product{
+	margin: 12px;
+	border:solid 1px #9CF;
+	float: left;
+	display: inline;
+	width: 150px;
+	height: 150px;
+	position: relative;
+	overflow: hidden;
+}
+#json{
+	clear: both;
+	display: block;
+}
+hr{
+	clear: both;
+	display: block;
+}
+.image{
+	position: absolute;
+	top:0;
+	left:0;
+	opacity: .33;
+	z-index: -1;
+}
+.productBox
+{
+	width: 600px;
+}
+.name {
+	font-size: 167%;
+	letter-spacing:-2px;
+}
+.price{
+	position: absolute;
+	bottom: 0;
+	left:0;
+	font-size: 78%;
+}
+.btnAdd, .btnDel{
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	margin:0;
+	border: none;
+	cursor: pointer;
+}
+
+	</style>
+</head>
+<body>
+<form id="showcase">
+	<div id="selectedItemsDiv">
+		<div>Itens selecionados (<span data-bind="text: selectedItems().length"></span>)</div>
+		<div id="totalBox">
+		<div> Total: <span data-bind="text: sumTotalSelected()"></span></div>
+		<div> Economize: <span data-bind="text: sumTotalOff()"></span></div>
+		<button data-bind="click: save">Finalizar</button>
+		</div>
+		<div data-bind="foreach: selectedItems" id="selectedItemsBox">
+			<div class="product">
+				<span class="name" data-bind="text: name"></span>
+				(<span data-bind="text: quantity"></span>)
+				<span class="price" data-bind="text: price"></span>
+				<button type="button" data-bind="click: $parent.removeItem" class="btnDel">-</button>
+				<img class="image" data-bind="attr:{src: image, alt: name}, style: { backgroundImage: 'url(' + image + ')' }" />
+			</div>
+		</div>
+		<hr>
+		
+	</div>
+	<div data-bind="foreach: items" class="productBox">
+		<div class="product">
+			<span class="name" data-bind="text: name"></span> 
+			<span class="price" data-bind="text: price"></span>
+			<button type="button" data-bind="click: $parent.addItem" class="btnAdd">+</button>
+			<img class="image" data-bind="attr:{src: image, alt: name}, style: { backgroundImage: 'url(' + image + ')' }" />
+		</div>
+	</div>
+	<button type="button" data-bind="click: loadFormServer">Carregar do servidor</button>
+</form>
+<textarea id="json" readonly cols="50" rows="20"></textarea>
+
+<script src="knockout-2.2.1.js"></script>
+<script type="text/javascript">
+
+
+var showCaseViewModel = function(_items){
+	var self = this;
+	self.items = ko.observableArray(_items);
+  self.observableQuantity = function(){
+    
+  };
+	self.selectedItems = ko.observableArray();
+	
+	self.addItem = function(__item){
+		var index = self.selectedItems.indexOf(__item);
+		var qty = 0;
+		if (index < 0) {
+			self.selectedItems.push(__item);
+      index = self.selectedItems.indexOf(__item);
+		}
+  
+  self.selectedItems()[index].quantity(self.selectedItems()[index].quantity() + 1);
+
+		self.selectedItems.sort(function(left, right) { 
+			return left.name == right.name ? 0 : (left.name < right.name ? -1 : 1) 
+		});
+	}
+	
+	self.removeItem = function(__item) {
+    if(__item.quantity() === 1)
+		{
+			__item.quantity(0);
+      
+      self.selectedItems.remove(__item);
+		}
+		else
+		{
+			__item.quantity(__item.quantity() - 1);
+		}
+    self.selectedItems.valueHasMutated();
+  };
+	
+	 self.save = function() {
+        document.getElementById("json").value = ko.toJSON(self.selectedItems);//ko.utils.stringifyJson(self.selectedItems);
+    };
+	
+	self.openDetails = function(__item) {
+		$('#details').showProductDetails(__item);
+	}
+	
+    self.sumTotalSelected = ko.computed(function() {
+       var total = 0;
+       for (var i = 0; i < self.selectedItems().length; i++)
+	   {
+           cur = self.selectedItems()[i];
+		   total += parseFloat(cur.price) * (parseInt(cur.quantity()) * (1 - (cur.discount) * (cur.quantity() >= cur.bulk)));
+	   }
+       return total.toFixed(2);
+    });
+
+    self.sumTotalOff = ko.computed(function() {
+       var total = 0,
+	       totaldiscount = self.sumTotalSelected();
+       for (var i = 0; i < self.selectedItems().length; i++)
+	   {
+           cur = self.selectedItems()[i];
+		   total += parseFloat(cur.price) * (parseInt(cur.quantity()));
+	   }
+	   
+	   debugger;
+       return (total - totaldiscount).toFixed(2);
+    });
+	
+    
+      self.loadFormServer = function() {
+      var selectedItemId = 0;
+      for(i in productsFromServer)
+        {
+          selectedItemId = productsFromServer[i].id;
+          
+        var selectedItem = ko.utils.arrayFirst(this.items(), function(item) {
+          return item.id === selectedItemId;
+      });
+      
+      for(j = 0; j < productsFromServer[i].quantity; j++)
+      {
+        self.addItem(selectedItem);
+      }
+    }
+    
+    
+}
+	
+};
+
+var products = [
+    { id: 1009, name: "O pequeno príncipe",  price: "50.55",  bulk: 3, discount: .1, quantity: ko.observable(0), image: "01.jpg"},
+    { id: 1013, name: "O leão Adamastor",  price: "99.90",  bulk: 0, discount: .00, quantity: ko.observable(0), image: "02.jpg"},
+    { id: 1019, name: "Dieta mediterrânea",  price: "199.90", bulk: 1, discount: .15, quantity: ko.observable(0), image: "03.jpg"},
+    { id: 1021, name: "O homem que calculava",  price: "44.90",  bulk: 2, discount: .20, quantity: ko.observable(0), image: "04.jpg"},
+    { id: 1031, name: "A lenda do guaraná",  price: "35.10",  bulk: 4, discount: .25, quantity: ko.observable(0), image: "05.jpg"},
+    { id: 1033, name: "As batalhas do castelo",  price: "44.75",  bulk: 3, discount: .05, quantity: ko.observable(0), image: "06.jpg"},
+    { id: 1039, name: "O menino maluquinho",  price: "88.80",  bulk: 2, discount: .07, quantity: ko.observable(0), image: "07.jpg"},
+    { id: 1049, name: "Boladas e amigos",  price: "64.20",  bulk: 3, discount: .02, quantity: ko.observable(0), image: "08.jpg"},
+    { id: 1051, name: "Pão quente e cenouras frescas",  price: "12.35",  bulk: 5, discount: .10, quantity: ko.observable(0), image: "09.jpg"},
+    { id: 1061, name: "O vendedor de sonhos", price: "45.77",  bulk: 1, discount: .12, quantity: ko.observable(0), image: "10.jpg"},
+    { id: 1063, name: "A cozinha maravilhosa de Ofélia", price: "9.99",   bulk: 4, discount: .25, quantity: ko.observable(0), image: "11.jpg"}
+];
+ko.applyBindings(new showCaseViewModel(products));
+
+
+var productsFromServer = [
+    { id: 1013, quantity: 2},
+    { id: 1019, quantity: 5},
+    { id: 1031, quantity: 3},
+    { id: 1039, quantity: 5},
+    { id: 1063, quantity: 4}
+];
+
+
+</script>
+
+</body>
+</html>
