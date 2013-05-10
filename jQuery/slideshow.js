@@ -3,7 +3,7 @@
 	var methods = {
 		self : this,
 		init : function (options) {
-			$.extend(methods.defaults, options);
+			$.extend(methods.defaults, (options ? options: {}));
 			return this.each(function () {
 				var self = $(this),
 				    width = 0,
@@ -16,20 +16,15 @@
 			return elem.wrap(methods.createWrapper).addClass('slideshow-main').find('li > img').each(function () {
 				width = $(this).width();
 				height = $(this).height();
-				debugger;
 				if (width > opts.maxWidth) {
 					ratio = opts.maxWidth / width;
 					$(this).css("width", opts.maxWidth);
 					$(this).css("height", height * ratio);
-					/*height = height * ratio;
-					width = width * ratio;*/
 				}
 				if ($(this).height() > opts.maxHeight) {
 					var ratio = opts.maxHeight / height;
-					    //width = 0;
 					$(this).css("height", opts.maxHeight);
 					$(this).css("width", width * ratio);
-					//width = width * ratio;
 				}
 			}).end().find('li').each(function () {
 				var txt = $(this).find('img').prop('title');
@@ -73,7 +68,8 @@
 		}
 	};
 	$.fn.slideShow = function (options, method) {
-		var opts = $.fn.slideShow.opts = $.extend({}, $.fn.slideShow.defaults, options);
+		var opts = $.extend({}, methods.defaults, (options ? options : {}));
+		    $.fn.slideShow.opts = opts;
 		if (methods[method]) {
 			return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
 		} else if (typeof method === 'object' || !method) {
@@ -84,9 +80,11 @@
 	};
 })(jQuery);
 $(window).load(function () {
-	$('#slideshow').slideShow({
-		maxWidth : 250,
-		maxHeight : 300,
-		panelWidth : 880
-	}).css('background', 'grey');
+	$('#slideshow').slideShow(
+	{
+			maxWidth : 320,
+			maxHeight : 240,
+			panelWidth : 800
+		}
+	).css('background', 'grey');
 });
